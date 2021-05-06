@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name legacy_components)(type Legacy)(uri ${KIPRJMOD}/legacy_components.lib)(options "")(descr ""))
+)

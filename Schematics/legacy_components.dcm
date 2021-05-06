@@ -1,0 +1,20 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP AT28C16
+D 16K (2kx8) bit Parallel EEPROM, 150ns/200us, DIP-24
+K Parallel EEPROM
+$ENDCMP
+#
+$CMP CY62256-70PC
+D 256K (32K x 8) Static RAM, 70ns, DIP-28
+K RAM SRAM CMOS MEMORY
+F https://ecee.colorado.edu/~mcclurel/Cypress_SRAM_CY62256.pdf
+$ENDCMP
+#
+$CMP HM62256BLP
+D 32,768-word × 8-bit High Speed CMOS Static RAM, 70ns, DIP-28
+K RAM SRAM CMOS MEMORY
+F https://web.mit.edu/6.115/www/document/62256.pdf
+$ENDCMP
+#
+#End Doc Library
