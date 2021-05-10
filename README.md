@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is an 8-bit discrete CPU based on SAP-1 architecture and mainly inspired by Ben Eater's implementation of it. The main differences in this design is as follows:
+This project is an 8-bit discrete CPU based on SAP-1 architecture and mainly inspired by Ben Eater's implementation of it. The main differences in this design are as follows:
 
 1. Using Schmitt Trigger Inverters instead of SR Latches that was creating some issues in certain situations.
 2. 8-bit Porgram Counter.
@@ -15,11 +15,11 @@ This project is an 8-bit discrete CPU based on SAP-1 architecture and mainly ins
 
 MSAP-2 will include:
 
-1. MMU to enable RAM segmentation and support up to 2KB of RAM
+1. MMU to enable RAM segmentation and support for up to 2KB of RAM
 2. More control signals by multiplexing the signals that are never enabled together
-3. Better ALU with more advanceds operations
-4. Interrupts
-5. Stacks
+3. Better ALU, supporting more operations
+4. Interrupt support
+5. Stack support
 
 ## Clock Module
 
@@ -43,19 +43,29 @@ These are two 8-bit registers, each created with two 4 bit D flip-flops (74HC173
 
 ## ALU
 
-This module contains two 4-bit full adders (74LS283) and two quad XORs (74HC86) to create 2's complement of second operand (coming from B register) to enable subtraction. This means that this module can add andsubtract two 8-bit numbers.
+This module contains two 4-bit full adders (74LS283) and two quad XORs (74HC86) to create 2's complement of second operand (coming from B register) to enable subtraction. This means that this module can add and subtract two 8-bit numbers.
 
 ![ALU](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/ALU.PNG)
 
 ## RAM Module
 
-This module contains an 8-bit register for the memory address, an HM6116P 2KB RAM with non-inverting I/O and circuitry for multiplexing data and address input from either the bus or programmer.
-Theere are two discrete transistors in this module. Q1 is a NPN BJT transistor creating a buffer circuit to minimize the clock signal distortion caused by the RC circuit that is used for creating a pulse signal to synchronize RAM input. Q2 is a P-channel MOSFET used to disconnect power from the RAM input multiplexers to avoid them sinking current from RAM I/O pins, since 74LS/HC157 doesn't have a high impedence mode. Note that because I wanted to avoid using a MSOFET for each I/O pin, this circuit only works if U43 and U43 are Low-Power Schottky series and not CMOS, since CMOS chips will still be powered via their ESD protection diodes on their input pins.
+This module contains an 8-bit register for the memory address, an HM6116P 2KB S-RAM with non-inverting I/O and circuitry for multiplexing data and address input from either the bus or the programmer.
+Theere are two discrete transistors in this module. Q1 is a NPN BJT transistor creating a buffer circuit to minimize the clock signal distortion caused by the RC circuit that is used for creating a pulse signal to synchronize RAM input. Q2 is a P-channel MOSFET used to disconnect power from the RAM input multiplexers to avoid them sinking current from RAM I/O pins, because 74LS/HC157 doesn't have a high impedence mode. Note that since I wanted to avoid using a MSOFET for each I/O pin, this circuit only works if U42 and U43 are Low-Power Schottky series and not CMOS, since CMOS chips will still be powered via their ESD protection diodes on their pins.
 
 ![RAM](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/RAM.PNG)
 
 ## Instructions Register
 
-This module contains a 4-bit register for OpCode and an 8-bit register for Operand. It works in such a way that it toggles between OpCode and Operand registers every time the II control signal is enabled and only enables the OpCode register output after a fetch cycle is done to next time that RST signal is enabled. The toggle mechanism is achieved by a 4 bit- presettable counter and a demultiplexer which keeps the IE pins high in between. The latching mechanism is achieved by a JK flip-flop that enables reusing fetch operation in uCodes.
+This module contains a 4-bit register for OpCode and an 8-bit register for Operand. It works in such a way that it toggles between OpCode and Operand registers every time the II control signal is enabled and only enables the OpCode register output after a fetch cycle is done, until the next time that RST signal is enabled. The toggle mechanism is achieved by a 4 bit presettable counter and a demultiplexer which keeps the IE pins high in between. The latching mechanism is achieved by a JK flip-flop that enables reusing fetch operation in uCodes. 
 
 ![IR](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Instructions%20Register.PNG)
+
+## Control Logic
+
+This module contains a u-instruction step counter, created by a 4-bit counter and a 3 to 8 line demultiplexer which is connected to two 2Kx8-bit AT28C16 EEPROMs that contains the uCodes and two quad inverters to create the active-low signals. This is to keep the output of EEPROMs always active-high, regardless of the control signal.
+
+![CL](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Control%20Logic.PNG)
+
+## Output Display and Register
+
+This module contains an 8 bit register and 
