@@ -21,6 +21,8 @@ MSAP-2 will include:
 4. Interrupt support
 5. Stack support
 
+![MSAP1](https://github.com/mehrantsi/MSAP-1/blob/main/IMG_0575.jpeg)
+
 ## Clock Module
 
 Main oscillator of the clock module is LM555 and it can be controlled with R1 potentiometer. The clock module contains two switches to enable bi-stable and mono-stable modes. The switches are debounced via 100K-10nF RC circuit connected to an input of U2, which is an Inverting Schmitt Trigger, enabling better noise control over the clock signal in faster clock speeds due to a possible higher mean time between bounces for mono-stable switch (SW2) for synchronously coupled chips, such as cascaded CMOS binary counters that rely on clean, corectly timed inputs. Failure to correctly debounce this switch causes all sort of unpredictable behaviors.
@@ -56,7 +58,7 @@ Theere are two discrete transistors in this module. Q1 is a NPN BJT transistor c
 
 ## Instructions Register
 
-This module contains a 4-bit register for OpCode and an 8-bit register for Operand. It works in such a way that it toggles between OpCode and Operand registers every time the II control signal is enabled and only enables the OpCode register output after a fetch cycle is done, until the next time that RST signal is enabled. The toggle mechanism is achieved by a 4 bit presettable counter and a demultiplexer which keeps the IE pins high in between. The latching mechanism is achieved by a JK flip-flop that enables reusing fetch operation in uCodes. 
+This module contains a 4-bit register for OpCode and an 8-bit register for Operand. It works in such a way that it toggles between OpCode and Operand registers every time the II control signal is enabled and only enables the OpCode register output after a fetch cycle is done, until the next time that asynchronous RST signal is enabled. The toggle mechanism is achieved by a 4 bit presettable counter and a demultiplexer which keeps the IE pins high in between. The latching mechanism is achieved by a JK flip-flop that enables reusing fetch operation in uCodes. 
 
 ![IR](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Instructions%20Register.PNG)
 
@@ -68,4 +70,18 @@ This module contains a u-instruction step counter, created by a 4-bit counter an
 
 ## Output Display and Register
 
-This module contains an 8 bit register and 
+This module contains an 8 bit register to store the output value, a 555 timer that with a dual JK flip-flp and a decoder which forms a multiplexer for 4 seven segment displays. an AT28C16 EEPROM is used to store Binary to Decimal decoding information. It also contains a switch (SW3) which allows switching between signed and unsigned presentation of the output.
+
+![OD](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Output%20Register%20and%20Display.PNG)
+
+## Flags Register
+
+This module contains a 4 bit D flip-flop to keep flags that can be used for conditional jumps in u-instructions and circuitry to check for zero sum out from ALU. currently it keeps carry flag (CF) and zero flag (ZF). The output of the register is connected to address lines of control logic EEPROMs, so the instructions executed for JC and JZ OpCodes changes.
+
+![FR](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Flags%20Register.PNG)
+
+## Reset Circuit
+
+This is a simple circuitry to rest all the modules by generating both active-low and active-high signals that are required to asynchronously reset the flip-flops and counters. It also used to generate the active-low, RSTSTP signal that is used to reset the u-instruction step counter as well as resetting the JK flip-flop that is used for latching the OpCodes in instructions register.
+
+![RC](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Reset%20Circuit.PNG)
