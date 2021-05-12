@@ -9,7 +9,7 @@ This project is an 8-bit discrete CPU based on SAP-1 architecture and mainly ins
 3. 256 bytes of RAM.
 4. 12-bit Instructions Register.
 5. Latching mechanism for Instructions Register to enable reusing the Fetch flow in [MSAP-1 uCodes](https://github.com/mehrantsi/8-bit_CPU_uCodes).
-6. [Enabling automated RAM input for programming](https://github.com/mehrantsi/8-bit_CPU_Programmer)
+6. Enabling [automated RAM input for programming](https://github.com/mehrantsi/8-bit_CPU_Programmer)
 7. Lower power consumption achieved by using CMOS chips instead of Low-Power Schottky, higher efficiency LEDs as well as using lower chip count in total, enabled by different debouncing circuit and non-inverting RAM. (200 mA including the programmer and all LEDs on)
 8. Better noise management, allowing faster clock speeds.
 
