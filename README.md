@@ -4,7 +4,7 @@
 
 This project is an 8-bit discrete CPU based on original SAP-1 architecture and mainly inspired by Ben Eater's implementation of it. The main differences in this design are as follows:
 
-1. Using Schmitt Trigger Inverters instead of SR Latches for clock module switches debouncing that was creating some issues in certain situations.
+1. Using Schmitt Trigger Inverters instead of SR Latches for clock module switch debouncing that was creating some issues in certain situations.
 2. 8-bit Porgram Counter.
 3. 256 bytes of RAM.
 4. 12-bit Instructions Register.
@@ -25,7 +25,7 @@ MSAP-2 will include:
 
 ## Clock Module
 
-Main oscillator of the clock module is an LM555 chip and it can be controlled with R1 potentiometer. The clock module contains two switches to enable bi-stable and mono-stable modes. The switches are debounced via 100K-10nF RC circuit connected to an input of U2, which is an Inverting Schmitt Trigger, enabling better noise control over the clock signal in faster clock speeds due to a possible higher mean time between bounces for mono-stable switch (SW2) for synchronously coupled chips, such as cascaded CMOS binary counters that rely on clean, corectly timed inputs. Failure to correctly debounce this switch causes all sort of unpredictable behaviors.
+Main oscillator of the clock module is an LM555 chip and it can be controlled with R1 potentiometer. The clock module contains two switches to enable bi-stable and mono-stable modes. The switches are debounced via 100K-10nF RC circuit connected to an input of U2, which is an Inverting Schmitt Trigger, providing better noise control over the clock signal in faster clock speeds due to a possible higher mean time between bounces for mono-stable switch (SW2) for synchronously coupled chips, such as cascaded CMOS binary counters that rely on clean, corectly timed inputs. Failure to correctly debounce this switch causes all sorts of unpredictable behaviors.
 
 ![CLK](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Clock.PNG)
 
