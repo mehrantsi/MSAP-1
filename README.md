@@ -74,7 +74,7 @@ This module contains a u-instruction step counter, created by a 4-bit counter an
 
 ## Output Display and Register
 
-This module contains an 8 bit register to store the output value, a 555 timer that with a dual JK flip-flp and a decoder which forms a multiplexer for 4 seven segment displays. an AT28C16 EEPROM is used to store [Binary to 7-segment decoding logic](https://github.com/mehrantsi/Mux7-Segment). It also contains a switch (SW3) which allows switching between signed and unsigned presentation of the output.
+This module contains an 8 bit register to store the output value, a 555 timer that with a dual JK flip-flp and a decoder, form a multiplexer for 4 seven segment displays. an AT28C16 EEPROM is used to store [Binary to 7-segment decoding logic](https://github.com/mehrantsi/Mux7-Segment). It also contains a switch (SW3) which allows switching between signed and unsigned presentation of the output.
 
 ![OD](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/Output%20Register%20and%20Display.PNG)
 
