@@ -1,8 +1,8 @@
-# MSAP-1 rev.B
+# MSAP-1 (Mehran's Simple as Possible) rev.B
 
 ## Overview
 
-This project is an 8-bit discrete CPU based on SAP-1 architecture and mainly inspired by Ben Eater's implementation of it. The main differences in this design are as follows:
+This project is an 8-bit discrete CPU based on original SAP-1 architecture and mainly inspired by Ben Eater's implementation of it. The main differences in this design are as follows:
 
 1. Using Schmitt Trigger Inverters instead of SR Latches for clock module switches debouncing that was creating some issues in certain situations.
 2. 8-bit Porgram Counter.
