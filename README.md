@@ -51,8 +51,8 @@ This module contains two 4-bit full adders (74LS283) and two quad XORs (74HC86) 
 
 ## RAM Module
 
-This module contains an 8-bit register for the memory address, an HM6116P 2KB S-RAM with non-inverting I/O and circuitry for multiplexing data and address input from either the bus or the programmer.
-Theere are two discrete transistors in this module. Q1 is a NPN BJT transistor creating a buffer circuit to minimize the clock signal distortion caused by the RC circuit that is used for creating a pulse signal to synchronize RAM input. Q2 is a P-channel MOSFET used to disconnect power from the RAM input multiplexers to avoid them sinking current from RAM I/O pins, because 74LS/HC157 doesn't have a high impedence mode. Note that since I wanted to avoid using a MSOFET for each I/O pin, this circuit only works if U42 and U43 are Low-Power Schottky series and not CMOS, since CMOS chips will still be powered via their ESD protection diodes on their pins.
+This module contains two 4-bit register for the memory address, an HM6116P 2KB S-RAM with non-inverting I/O and circuitry for multiplexing data and address input from either the bus or the programmer.
+There are two discrete transistors in this module. Q1 is an NPN BJT transistor creating a buffer circuit to minimize the clock signal distortion caused by the RC circuit that is used for creating a pulse signal to synchronize RAM input. Q2 is a P-channel MOSFET used to disconnect power from the RAM input multiplexers to avoid them sinking current from RAM I/O pins, because 74LS/HC157 doesn't have a high impedence mode. Note that since I wanted to avoid using a MSOFET for each I/O pin, this circuit only works if U42 and U43 are Low-Power Schottky series and not CMOS, since CMOS chips will still be powered via their ESD protection diodes on their pins.
 
 ![RAM](https://github.com/mehrantsi/MSAP-1/blob/main/Schematics/PNGs/RAM.PNG)
 
