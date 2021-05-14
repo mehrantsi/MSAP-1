@@ -4,7 +4,7 @@
 
 This project is an 8-bit discrete CPU based on original SAP-1 architecture and mainly inspired by Ben Eater's implementation of it. The main differences in this design are as follows:
 
-1. Using Schmitt Trigger Inverters instead of SR Latches for clock module switch debouncing that was creating some issues in certain situations.
+1. Using Schmitt Trigger Inverters instead of SR Latches for clock module switch debouncing, that was creating some issues in certain situations.
 2. 8-bit Porgram Counter.
 3. 256 bytes of RAM.
 4. 12-bit Instructions Register.
