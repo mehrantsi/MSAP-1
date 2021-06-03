@@ -35,6 +35,10 @@ At the moment, the example programs are as follows:
 6. **NthRoot**: calculates the nth root of a given 8 bit integer
 7. **Factorial**: calculates the factorial of a given 8 bit integer
 
+## Debugging Programs
+
+You can use [CPU Debugger](https://github.com/mehrantsi/8-bit_CPU_Debugger) project for this purpose.
+
 ## Schematics
 
 ### Clock Module
