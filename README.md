@@ -25,7 +25,7 @@ MSAP-2 will include:
 
 ## Simulator
 
-The [simulator](simulator) folder contains a cycle-accurate digital twin of this machine: it executes the real microcode EEPROM images in a 3D/2D bench view with a built-in assembler, breakpoints, a logic analyzer, a per-part electrical model, and KiCad netlist/PCB export. It is the workbench for settling MSAP-2 before building it. The [simulator-msap2](simulator-msap2) folder is that next step in motion: a behavioral draft of MSAP-2 (interrupts, stack, 2KB, terminal, smart disk) running the MOS 1.0 monitor operating system.
+The [simulator](simulator) folder contains a cycle-accurate digital twin of this machine: it executes the real microcode EEPROM images in a 3D/2D bench view with a built-in assembler, breakpoints, a logic analyzer, a per-part electrical model, and KiCad netlist/PCB export. It is the workbench for settling MSAP-2 before building it. MSAP-2 has grown into its own project: see [~/dev/MSAP-2](../MSAP-2) - a microcode-accurate rev.A (interrupts, stack, 8KB, terminal, smart disk) that boots the MOS operating system from ROM, with its OS in [~/dev/MOS-1](../MOS-1).
 
 ## Sample Programs
 

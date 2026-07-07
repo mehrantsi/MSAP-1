@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { downloadText } from '../export/download'
+import { renderAllKicadSch } from '../export/kicadSch'
 import { buildNetlistModel, renderKicadNetlist } from '../export/netlist'
 import { renderKicadPcb } from '../export/pcb'
 import { renderBlockDiagramSvg } from '../export/svg'
@@ -150,6 +151,13 @@ export function TopBar() {
             </button>
             <button onClick={() => downloadText('msap1.kicad_pcb', renderKicadPcb('tht'))}>KiCad PCB (DIP)</button>
             <button onClick={() => downloadText('msap1-smd.kicad_pcb', renderKicadPcb('smd'))}>KiCad PCB (SMD)</button>
+            <button
+              onClick={() => {
+                for (const sheet of renderAllKicadSch()) downloadText(`${sheet.name}.kicad_sch`, sheet.content)
+              }}
+            >
+              KiCad schematics (per board)
+            </button>
             <button onClick={() => downloadText('msap1-blocks.svg', renderBlockDiagramSvg(), 'image/svg+xml')}>
               Block SVG
             </button>
