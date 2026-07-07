@@ -1,5 +1,7 @@
-import { EXAMPLES } from '../core/examples'
+import { currentMachine } from '../machines'
 import { useSim } from '../state/store'
+
+const EXAMPLES = currentMachine().examples
 
 export function EditorPanel() {
   const source = useSim((s) => s.source)

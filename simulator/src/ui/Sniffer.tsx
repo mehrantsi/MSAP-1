@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { describeOpcode } from '../core/disasm'
 import { TraceEntry } from '../core/machine'
-import { SIGNALS } from '../core/signals'
-import { machine, useSim } from '../state/store'
+import { currentMachine } from '../machines'
+import { activeIsa, machine, useSim } from '../state/store'
 
-const LANES = SIGNALS.filter((s) => s.name !== 'RST')
+const LANES = currentMachine().signals.filter((s) => s.name !== 'RST')
 const CAPTURE = 2048
 const WINDOWS = [64, 128, 256, 512, 1024, 2048]
 const LABEL_WIDTH = 44
@@ -114,7 +114,7 @@ export function Sniffer() {
   const decoded = decodedSource.map((entry) => ({
     key: entry.cycle,
     current: cursorEntry !== null && entry.cycle === cursorEntry.cycle,
-    text: `${entry.phase === 'fetch' ? 'FETCH' : describeOpcode(entry.opcode)}  T${entry.step}  bus 0x${entry.bus
+    text: `${entry.phase === 'fetch' ? 'FETCH' : describeOpcode(entry.opcode, activeIsa())}  T${entry.step}  bus 0x${entry.bus
       .toString(16)
       .toUpperCase()
       .padStart(2, '0')}`,

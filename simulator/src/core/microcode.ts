@@ -29,10 +29,10 @@ export const UCODE_TEMPLATE: number[][] = [
   [AO | OI, RST, 0, 0, 0, 0, 0, 0],
 ]
 
-export function buildControlRom(): number[][][] {
+export function buildControlRom(template: number[][] = UCODE_TEMPLATE): number[][][] {
   const banks: number[][][] = []
   for (let flags = 0; flags < 4; flags++) {
-    banks.push(UCODE_TEMPLATE.map((steps) => [...steps]))
+    banks.push(template.map((steps) => [...steps]))
   }
   banks[FLAGS_Z0C1][OP_JC][0] = IO | J
   banks[FLAGS_Z1C0][OP_JZ][0] = IO | J

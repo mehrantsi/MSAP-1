@@ -12,11 +12,70 @@ import {
   setActiveDesign,
 } from '../core/design'
 import { estimatePower } from '../core/electrical'
-import { EXAMPLES } from '../core/examples'
 import { Machine, Snapshot } from '../core/machine'
 import { ConnectionDef, PassiveKind } from '../core/modules'
+import { currentMachine, storageKey } from '../machines'
 
-export const machine = new Machine()
+export const machine: Machine = currentMachine().createCore()
+
+function loadMicrocode(): number[][] | null {
+  try {
+    const raw = localStorage.getItem(storageKey('msap1-microcode'))
+    if (raw) {
+      const parsed = JSON.parse(raw) as number[][]
+      if (Array.isArray(parsed) && parsed.length === 16) return parsed
+    }
+  } catch {
+    /* stock */
+  }
+  return null
+}
+
+const initialMicrocode = loadMicrocode()
+if (initialMicrocode) machine.setTemplate(initialMicrocode)
+
+export interface MicroTestResult {
+  name: string
+  expected: number
+  actual: number | null
+  pass: boolean
+}
+
+export interface IsaEdit {
+  mnemonic: string
+  operands: ('address' | 'immediate')[]
+}
+
+function loadIsaEdits(): Record<number, IsaEdit> {
+  try {
+    const raw = localStorage.getItem(storageKey('msap1-isa'))
+    if (raw) return JSON.parse(raw)
+  } catch {
+    /* stock */
+  }
+  return {}
+}
+
+export function activeIsa() {
+  const base = currentMachine().isa
+  const edits = useSim.getState().isaEdits
+  const instructions = base.instructions
+    .map((def) => {
+      const edit = edits[def.opcode >> 4]
+      return edit ? { ...def, mnemonic: edit.mnemonic, operands: edit.operands } : def
+    })
+    .concat(
+      Object.entries(edits)
+        .filter(([nibble]) => !base.instructions.some((d) => d.opcode >> 4 === Number(nibble)))
+        .map(([nibble, edit]) => ({
+          mnemonic: edit.mnemonic,
+          opcode: Number(nibble) << 4,
+          operands: edit.operands,
+          description: 'custom instruction',
+        })),
+    )
+  return { ...base, instructions }
+}
 
 const initialDesign = loadDesign()
 setActiveDesign(initialDesign)
@@ -44,7 +103,7 @@ export interface PsuState {
   tripped: boolean
 }
 
-export const PANEL_IDS = ['program', 'inspector', 'sniffer', 'scope', 'psu', 'schematic'] as const
+export const PANEL_IDS = ['program', 'inspector', 'sniffer', 'scope', 'psu', 'schematic', 'microcode'] as const
 export type PanelId = (typeof PANEL_IDS)[number]
 
 const PANEL_DEFAULTS: Record<PanelId, PanelState> = {
@@ -54,13 +113,14 @@ const PANEL_DEFAULTS: Record<PanelId, PanelState> = {
   scope: { x: -680, y: -540, collapsed: false, visible: false },
   psu: { x: 330, y: 52, collapsed: false, visible: false },
   schematic: { x: 360, y: 90, collapsed: false, visible: false },
+  microcode: { x: 400, y: 70, collapsed: false, visible: false },
 }
 
 const DEFAULT_PROBES: (Probe | null)[] = [{ chipRef: 'U46', pin: '2' }, { chipRef: 'U32', pin: '18' }, null, null]
 
 function loadProbes(): (Probe | null)[] {
   try {
-    const raw = localStorage.getItem('msap1-probes')
+    const raw = localStorage.getItem(storageKey('msap1-probes'))
     if (raw) {
       const parsed = JSON.parse(raw) as (Probe | null)[]
       if (Array.isArray(parsed) && parsed.length === 4) return parsed
@@ -73,7 +133,7 @@ function loadProbes(): (Probe | null)[] {
 
 function persistProbes(probes: (Probe | null)[]): void {
   try {
-    localStorage.setItem('msap1-probes', JSON.stringify(probes))
+    localStorage.setItem(storageKey('msap1-probes'), JSON.stringify(probes))
   } catch {
     /* private mode */
   }
@@ -81,7 +141,7 @@ function persistProbes(probes: (Probe | null)[]): void {
 
 function loadSchematicView(): Record<string, { zoom: number; wires: boolean }> {
   try {
-    const raw = localStorage.getItem('msap1-schview')
+    const raw = localStorage.getItem(storageKey('msap1-schview'))
     if (raw) return JSON.parse(raw)
   } catch {
     /* fresh */
@@ -135,6 +195,9 @@ interface SimStore {
   tooltip: { text: string; x: number; y: number } | null
   design: CustomDesign
   designVersion: number
+  microcode: number[][]
+  microTests: MicroTestResult[] | null
+  isaEdits: Record<number, IsaEdit>
 
   refresh: () => void
   setRunning: (running: boolean) => void
@@ -166,6 +229,11 @@ interface SimStore {
   setSchematicView: (boardId: string, patch: Partial<{ zoom: number; wires: boolean }>) => void
   setSchematicPos: (ref: string, x: number, y: number) => void
   clearSchematicPos: (ref: string) => void
+  setMicrocodeWord: (opcode: number, step: number, word: number) => void
+  resetMicrocode: () => void
+  runMicrocodeTests: () => void
+  setIsaEdit: (nibble: number, edit: IsaEdit | null) => void
+  resetIsa: () => void
   removeBaseWire: (key: string) => void
   restoreBaseWire: (key: string) => void
   resetDesign: () => void
@@ -188,7 +256,7 @@ export const useSim = create<SimStore>((set, get) => ({
   hz: 40,
   signed: false,
   view: '3d',
-  source: EXAMPLES[0].source,
+  source: currentMachine().examples[0].source,
   asmError: null,
   loadedName: null,
   labels: [],
@@ -210,6 +278,9 @@ export const useSim = create<SimStore>((set, get) => ({
   tooltip: null,
   design: initialDesign,
   designVersion: 0,
+  microcode: initialMicrocode ?? currentMachine().microcode.stockTemplate(),
+  microTests: null,
+  isaEdits: loadIsaEdits(),
 
   refresh: () => set((s) => ({ snap: machine.snapshot(), traceVersion: s.traceVersion + 1 })),
   setRunning: (running) => set({ running }),
@@ -241,7 +312,7 @@ export const useSim = create<SimStore>((set, get) => ({
     const current = get().schematicView[boardId] ?? { zoom: 1, wires: true }
     const schematicView = { ...get().schematicView, [boardId]: { ...current, ...patch } }
     try {
-      localStorage.setItem('msap1-schview', JSON.stringify(schematicView))
+      localStorage.setItem(storageKey('msap1-schview'), JSON.stringify(schematicView))
     } catch {
       /* private mode */
     }
@@ -260,6 +331,79 @@ export const useSim = create<SimStore>((set, get) => ({
     applyDesign(design, set)
   },
 
+  setMicrocodeWord: (opcode, step, word) => {
+    const microcode = get().microcode.map((row) => [...row])
+    microcode[opcode][step] = word
+    machine.setTemplate(microcode)
+    try {
+      localStorage.setItem(storageKey('msap1-microcode'), JSON.stringify(microcode))
+    } catch {
+      /* private mode */
+    }
+    set({ microcode, microTests: null })
+    get().refresh()
+  },
+
+  resetMicrocode: () => {
+    const microcode = currentMachine().microcode.stockTemplate()
+    machine.setTemplate(microcode)
+    try {
+      localStorage.removeItem(storageKey('msap1-microcode'))
+    } catch {
+      /* private mode */
+    }
+    set({ microcode, microTests: null })
+    get().refresh()
+  },
+
+  setIsaEdit: (nibble, edit) => {
+    const isaEdits = { ...get().isaEdits }
+    if (edit) isaEdits[nibble] = edit
+    else delete isaEdits[nibble]
+    try {
+      localStorage.setItem(storageKey('msap1-isa'), JSON.stringify(isaEdits))
+    } catch {
+      /* private mode */
+    }
+    set({ isaEdits, microTests: null })
+  },
+
+  resetIsa: () => {
+    try {
+      localStorage.removeItem(storageKey('msap1-isa'))
+    } catch {
+      /* private mode */
+    }
+    set({ isaEdits: {}, microTests: null })
+  },
+
+  runMicrocodeTests: () => {
+    const definition = currentMachine()
+    const template = get().microcode
+    const results: MicroTestResult[] = []
+    for (const example of definition.examples) {
+      if (!example.expect) continue
+      const core = definition.createCore()
+      core.setTemplate(template)
+      const assembled = assemble(example.source, activeIsa())
+      if (!assembled.ok) {
+        results.push({ name: example.name, expected: example.expect.out, actual: null, pass: false })
+        continue
+      }
+      core.loadImage(assembled.result.image)
+      let budget = 2000000
+      while (!core.halted && budget-- > 0) core.tick()
+      const actual = core.halted ? core.out : null
+      results.push({
+        name: example.name,
+        expected: example.expect.out,
+        actual,
+        pass: core.halted && core.out === example.expect.out,
+      })
+    }
+    set({ microTests: results })
+  },
+
   removeBaseWire: (key) => {
     const design = structuredClone(get().design)
     design.removedWires = design.removedWires ?? []
@@ -276,7 +420,7 @@ export const useSim = create<SimStore>((set, get) => ({
   resetDesign: () => {
     const design = freshDesign()
     try {
-      localStorage.removeItem('msap1-design')
+      localStorage.removeItem(storageKey('msap1-design'))
     } catch {
       /* private mode */
     }
@@ -402,7 +546,7 @@ export const useSim = create<SimStore>((set, get) => ({
   },
 
   assembleAndLoad: () => {
-    const result = assemble(get().source)
+    const result = assemble(get().source, activeIsa())
     if (!result.ok) {
       set({ asmError: result.error })
       return
@@ -418,10 +562,10 @@ export const useSim = create<SimStore>((set, get) => ({
   },
 
   loadExample: (name) => {
-    const example = EXAMPLES.find((e) => e.name === name)
+    const example = currentMachine().examples.find((e) => e.name === name)
     if (!example) return
     set({ source: example.source, loadedName: name })
-    const result = assemble(example.source)
+    const result = assemble(example.source, activeIsa())
     if (result.ok) {
       machine.reset()
       machine.loadImage(result.result.image)

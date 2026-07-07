@@ -4,6 +4,7 @@ import { startRunner, useSim } from './state/store'
 import { EditorPanel } from './ui/EditorPanel'
 import { FloatingPanel } from './ui/FloatingPanel'
 import { InspectorPanel } from './ui/InspectorPanel'
+import { MicrocodePanel } from './ui/MicrocodePanel'
 import { PsuPanel } from './ui/PsuPanel'
 import { SchematicPanel } from './ui/SchematicPanel'
 import { Scope } from './ui/Scope'
@@ -60,6 +61,9 @@ export default function App() {
         <PsuPanel />
       </FloatingPanel>
       <SchematicFloating />
+      <FloatingPanel id="microcode" title="Microcode" width={720} maximizable>
+        <MicrocodePanel />
+      </FloatingPanel>
       <Transport />
       <ViewControls />
       <Tooltip />

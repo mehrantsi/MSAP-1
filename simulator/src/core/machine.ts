@@ -65,6 +65,10 @@ export class Machine {
   trace: TraceEntry[] = []
   private traceHead = 0
 
+  setTemplate(template: number[][]): void {
+    this.rom = buildControlRom(template)
+  }
+
   reset(): void {
     this.bus = 0
     this.pc = 0

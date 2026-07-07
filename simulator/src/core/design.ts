@@ -1,4 +1,5 @@
-import { ChipDef, ConnectionDef, CONNECTIONS, ModuleDef, MODULES, PassiveDef, PassiveKind } from './modules'
+import { currentMachine, storageKey } from '../machines'
+import { ChipDef, ConnectionDef, ModuleDef, PassiveDef, PassiveKind } from './modules'
 import { PARTS } from './parts'
 
 function applySwap(replacements: Record<string, string>, chip: ChipDef): ChipDef {
@@ -64,7 +65,7 @@ export function freshDesign(): CustomDesign {
 
 export function loadDesign(): CustomDesign {
   try {
-    const raw = localStorage.getItem('msap1-design')
+    const raw = localStorage.getItem(storageKey('msap1-design'))
     if (raw) return { ...EMPTY_DESIGN, ...JSON.parse(raw) }
   } catch {
     /* fresh */
@@ -78,7 +79,7 @@ export function activeSchematicPos(): Record<string, { x: number; y: number }> {
 
 export function persistDesign(design: CustomDesign): void {
   try {
-    localStorage.setItem('msap1-design', JSON.stringify(design))
+    localStorage.setItem(storageKey('msap1-design'), JSON.stringify(design))
   } catch {
     /* private mode */
   }
@@ -107,7 +108,7 @@ export function activeModules(): ModuleDef[] {
   const replacements = active.replacements ?? {}
   const overrides = active.passiveOverrides ?? {}
   const pinNets = active.pinNets ?? {}
-  const modules: ModuleDef[] = MODULES.map((mod) => ({
+  const modules: ModuleDef[] = currentMachine().modules.map((mod) => ({
     ...mod,
     chips: [...mod.chips, ...(active.chips[mod.id] ?? [])].map((chip) =>
       applyPinNets(pinNets, applySwap(replacements, chip)),
@@ -153,7 +154,10 @@ export function activeModules(): ModuleDef[] {
 export function activeConnections(): ConnectionDef[] {
   if (connectionsCache) return connectionsCache
   const removed = new Set(active.removedWires ?? [])
-  connectionsCache = [...CONNECTIONS.filter((conn) => !removed.has(wireKey(conn))), ...active.connections]
+  connectionsCache = [
+    ...currentMachine().connections.filter((conn) => !removed.has(wireKey(conn))),
+    ...active.connections,
+  ]
   return connectionsCache
 }
 

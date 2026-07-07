@@ -3,6 +3,7 @@ import { downloadText } from '../export/download'
 import { buildNetlistModel, renderKicadNetlist } from '../export/netlist'
 import { renderKicadPcb } from '../export/pcb'
 import { renderBlockDiagramSvg } from '../export/svg'
+import { currentMachine, MACHINES, switchMachine } from '../machines'
 import { PanelId, useSim } from '../state/store'
 
 const PANEL_LABELS: { id: PanelId; label: string }[] = [
@@ -12,6 +13,7 @@ const PANEL_LABELS: { id: PanelId; label: string }[] = [
   { id: 'scope', label: 'Scope' },
   { id: 'psu', label: 'PSU' },
   { id: 'schematic', label: 'Schematic' },
+  { id: 'microcode', label: 'Microcode' },
 ]
 
 const HELP_SECTIONS: { title: string; lines: string[] }[] = [
@@ -40,6 +42,15 @@ const HELP_SECTIONS: { title: string; lines: string[] }[] = [
       'Clicking a chip pin in the 3D scene selects the same pin in the schematic.',
       'Add chips and parts (including LEDs and 10-LED bars) from the rows above the sheet; drag symbols to rearrange, +/- to zoom.',
       'Create or remove boards and reset to stock from the bottom row.',
+    ],
+  },
+  {
+    title: 'Microcode',
+    lines: [
+      'The Microcode panel edits the control-word table the machine executes, live: click a cell, toggle signals.',
+      'The glowing cell is the currently executing microstep; modified cells are highlighted with per-word revert.',
+      'Run examples validates every example program against expected outputs on your edited microcode.',
+      'Export EEPROM .bin produces the two 1KB images the Arduino programmer burns - test before you flash.',
     ],
   },
   {
@@ -80,8 +91,22 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="brand">
-        <span className="brand-name">MSAP-1</span>
-        <span className="brand-sub">rev.B digital twin</span>
+        <span className="brand-name">{currentMachine().name}</span>
+        <span className="brand-sub">{currentMachine().subtitle}</span>
+        {MACHINES.length > 1 && (
+          <select
+            className="machine-picker"
+            value={currentMachine().id}
+            onChange={(e) => switchMachine(e.target.value)}
+            aria-label="Machine"
+          >
+            {MACHINES.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
       <div className="topbar-actions">
         <div className="segmented" role="group" aria-label="Panels">

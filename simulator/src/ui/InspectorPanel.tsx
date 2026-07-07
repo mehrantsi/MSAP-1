@@ -3,23 +3,18 @@ import { activeFindChip, activeModules } from '../core/design'
 import { disassemble } from '../core/disasm'
 import { estimatePower } from '../core/electrical'
 import { PARTS } from '../core/parts'
-import { SIGNALS } from '../core/signals'
-import { InspectorTab, useSim } from '../state/store'
+import { currentMachine } from '../machines'
+import { activeIsa, InspectorTab, useSim } from '../state/store'
 
 const hex = (v: number, width = 2) => v.toString(16).toUpperCase().padStart(width, '0')
 
 function StateTab() {
   const snap = useSim((s) => s.snap)
-  const rows: [string, string][] = [
-    ['PC', `0x${hex(snap.pc)}  ${snap.pc}`],
-    ['A', `0x${hex(snap.a)}  ${snap.a}`],
-    ['B', `0x${hex(snap.b)}  ${snap.b}`],
-    ['ALU', `0x${hex(snap.aluOut)}  ${snap.aluOut}`],
-    ['MAR', `0x${hex(snap.mar)}  ${snap.mar}`],
-    ['IR', `${snap.irOpcode.toString(2).padStart(4, '0')} | 0x${hex(snap.irOperand)}`],
-    ['OUT', `0x${hex(snap.out)}  ${snap.out}`],
-    ['BUS', `0x${hex(snap.bus)}  ${snap.bus}`],
-  ]
+  const machineDef = currentMachine()
+  const rows: [string, string][] = machineDef.registers.map((reg) => [
+    reg.name,
+    reg.format ? reg.format(snap) : `0x${hex(reg.get(snap))}  ${reg.get(snap)}`,
+  ])
   return (
     <div>
       <table className="kv">
@@ -33,15 +28,18 @@ function StateTab() {
         </tbody>
       </table>
       <div className="flag-row">
-        <span className={snap.carry ? 'flag on' : 'flag'}>CF</span>
-        <span className={snap.zero ? 'flag on' : 'flag'}>ZF</span>
+        {machineDef.flags.map((flag) => (
+          <span key={flag.name} className={flag.get(snap) ? 'flag on' : 'flag'}>
+            {flag.name}
+          </span>
+        ))}
         <span className="flag on subtle">{snap.fetch ? 'FETCH' : 'EXEC'}</span>
         <span className="flag on subtle">T{snap.step}</span>
         {snap.busConflict && <span className="flag warn">BUS CONFLICT</span>}
       </div>
       <div className="panel-subtitle">Control word</div>
       <div className="signal-grid">
-        {SIGNALS.map((sig) => {
+        {machineDef.signals.map((sig) => {
           const on = (snap.controlWord & sig.bit) !== 0
           return (
             <span key={sig.name} className={on ? 'sig on' : 'sig'} title={sig.description}>
@@ -58,7 +56,7 @@ function RamTab() {
   const snap = useSim((s) => s.snap)
   const breakpoints = useSim((s) => s.breakpoints)
   const toggleBreakpoint = useSim((s) => s.toggleBreakpoint)
-  const disasm = disassemble(snap.ram, snap.pc, 5)
+  const disasm = disassemble(snap.ram, snap.pc, 5, activeIsa())
 
   return (
     <div>
