@@ -94,6 +94,12 @@ export const PARTS: Record<string, PartSpec> = {
     inputImpedance: 'IIL 0.4mA @ 0.4V (LS input)', outputDriveMa: 8, tpdNs: 14,
     description: 'Quad 2-input multiplexer (RAM data mux; deliberately LS so power gating works - CMOS would back-power through ESD diodes)',
   },
+  '74LS139': {
+    value: '74LS139', vccMinV: 4.75, vccMaxV: 5.25, family: 'LS', package: 'DIP-16', pins: 16, vccPin: 16, gndPin: 8,
+    iccTypMa: 6.8, iccMaxMa: 11, vihV: 2.0, vilV: 0.8, vohV: 3.4, volV: 0.35,
+    inputImpedance: 'IIL 0.4mA @ 0.4V (LS input)', outputDriveMa: 8, tpdNs: 22,
+    description: 'Dual 2-to-4 decoder (display digit select, per rev.B)',
+  },
   '74HC161': {
     value: '74HC161', vccMinV: 2, vccMaxV: 6, family: 'HC', package: 'DIP-16', pins: 16, vccPin: 16, gndPin: 8,
     iccTypMa: 0.004, iccMaxMa: 0.08, vihV: 3.5, vilV: 1.5,
