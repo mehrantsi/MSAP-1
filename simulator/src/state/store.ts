@@ -139,6 +139,26 @@ function persistProbes(probes: (Probe | null)[]): void {
   }
 }
 
+type WireToggles = Record<'bus' | 'ctl' | 'clk', boolean>
+
+function loadWireToggles(): WireToggles {
+  try {
+    const raw = localStorage.getItem(storageKey('msap1-wires'))
+    if (raw) return { bus: true, ctl: true, clk: false, ...JSON.parse(raw) }
+  } catch {
+    /* fresh */
+  }
+  return { bus: true, ctl: true, clk: false }
+}
+
+function storeWireToggles(wires: WireToggles): void {
+  try {
+    localStorage.setItem(storageKey('msap1-wires'), JSON.stringify(wires))
+  } catch {
+    /* private mode */
+  }
+}
+
 function loadSchematicView(): Record<string, { zoom: number; wires: boolean }> {
   try {
     const raw = localStorage.getItem(storageKey('msap1-schview'))
@@ -269,7 +289,7 @@ export const useSim = create<SimStore>((set, get) => ({
   schematicView: loadSchematicView(),
   inspectorTab: 'state',
   traceVersion: 0,
-  wires: { bus: true, ctl: true, clk: false },
+  wires: loadWireToggles(),
   dragMode: 'orbit',
   psu: { on: true, vcc: 5, limitMa: 800, tripped: false },
   probes: loadProbes(),
@@ -427,7 +447,12 @@ export const useSim = create<SimStore>((set, get) => ({
     setActiveDesign(design)
     set({ design, designVersion: get().designVersion + 1, designerBoard: 'ram', selectedChip: null, selectedPassive: null })
   },
-  toggleWires: (kind) => set((s) => ({ wires: { ...s.wires, [kind]: !s.wires[kind] } })),
+  toggleWires: (kind) =>
+    set((s) => {
+      const wires = { ...s.wires, [kind]: !s.wires[kind] }
+      storeWireToggles(wires)
+      return { wires }
+    }),
   setDragMode: (dragMode) => set({ dragMode }),
 
   setPsu: (patch) => {

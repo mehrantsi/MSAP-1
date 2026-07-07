@@ -4,6 +4,7 @@ import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { activeModules } from '../core/design'
+import { storageKey } from '../machines'
 import { useSim, ViewMode } from '../state/store'
 import { Board } from './Board'
 import { viewApi } from './viewApi'
@@ -14,19 +15,95 @@ const CAMERA_TARGETS: Record<ViewMode, THREE.Vector3> = {
   '2d': new THREE.Vector3(0, 18.5, 0.001),
 }
 
+interface SavedCamera {
+  position: [number, number, number]
+  target: [number, number, number]
+}
+
+const CAMERA_STORE = storageKey('msap1-camera')
+
+function loadCameras(): Partial<Record<ViewMode, SavedCamera>> {
+  try {
+    const raw = localStorage.getItem(CAMERA_STORE)
+    if (raw) return JSON.parse(raw)
+  } catch {
+    /* fresh view */
+  }
+  return {}
+}
+
+function storeCameras(cams: Partial<Record<ViewMode, SavedCamera>>): void {
+  try {
+    localStorage.setItem(CAMERA_STORE, JSON.stringify(cams))
+  } catch {
+    /* full or private */
+  }
+}
+
+type Orbit = { target: THREE.Vector3; update: () => void; addEventListener: (e: string, fn: () => void) => void; removeEventListener: (e: string, fn: () => void) => void }
+
 function CameraRig({ view }: { view: ViewMode }) {
   const { camera, controls } = useThree()
   const animating = useRef(true)
   const lastView = useRef(view)
+  const restored = useRef(false)
   const dragMode = useSim((s) => s.dragMode)
+
+  const applySaved = (saved: SavedCamera) => {
+    const orbit = controls as unknown as Orbit | null
+    camera.position.set(...saved.position)
+    camera.up.set(0, view === '2d' ? 0 : 1, view === '2d' ? -1 : 0)
+    if (orbit) {
+      orbit.target.set(...saved.target)
+      orbit.update()
+    } else {
+      camera.lookAt(...saved.target)
+    }
+    animating.current = false
+  }
+
+  useEffect(() => {
+    if (restored.current) return
+    const orbit = controls as unknown as Orbit | null
+    if (!orbit) return
+    restored.current = true
+    const saved = loadCameras()[view]
+    if (saved) applySaved(saved)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controls])
 
   useEffect(() => {
     if (lastView.current !== view) {
       lastView.current = view
-      animating.current = true
+      const saved = loadCameras()[view]
+      if (saved) {
+        applySaved(saved)
+      } else {
+        animating.current = true
+      }
     }
     camera.up.set(0, view === '2d' ? 0 : 1, view === '2d' ? -1 : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, camera])
+
+  const saveRef = useRef<() => void>(() => {})
+
+  useEffect(() => {
+    const orbit = controls as unknown as Orbit | null
+    if (!orbit) return
+    const save = () => {
+      if (animating.current) return
+      const cams = loadCameras()
+      cams[view] = {
+        position: [camera.position.x, camera.position.y, camera.position.z],
+        target: [orbit.target.x, orbit.target.y, orbit.target.z],
+      }
+      storeCameras(cams)
+    }
+    saveRef.current = save
+    orbit.addEventListener('end', save)
+    return () => orbit.removeEventListener('end', save)
+  }, [controls, camera, view])
 
   useEffect(() => {
     const orbit = controls as unknown as { mouseButtons?: { LEFT: number }; touches?: { ONE: number } } | null
@@ -52,6 +129,9 @@ function CameraRig({ view }: { view: ViewMode }) {
       zoomGoal.current = null
       animating.current = true
       orbit?.update()
+      const cams = loadCameras()
+      delete cams[view]
+      storeCameras(cams)
     }
   }, [camera, controls, view])
 
@@ -71,26 +151,13 @@ function CameraRig({ view }: { view: ViewMode }) {
       const next = THREE.MathUtils.damp(distance, zoomGoal.current, 7, dt)
       camera.position.copy(target.clone().add(direction.multiplyScalar(next / distance)))
       orbit?.update()
-      if (Math.abs(next - zoomGoal.current) < 0.02) zoomGoal.current = null
+      if (Math.abs(next - zoomGoal.current) < 0.02) {
+        zoomGoal.current = null
+        saveRef.current()
+      }
     }
   })
   return null
-}
-
-function BusGlow() {
-  const snap = useSim((s) => s.snap)
-  const active = snap.bus !== 0 && !snap.halted
-  return (
-    <mesh position={[0, -0.02, -0.1]}>
-      <boxGeometry args={[0.06, 0.02, 8.0]} />
-      <meshStandardMaterial
-        color={active ? '#ffae00' : '#1a1206'}
-        emissive="#ffae00"
-        emissiveIntensity={active ? 1.6 : 0.05}
-        roughness={0.5}
-      />
-    </mesh>
-  )
 }
 
 export function Scene() {
@@ -119,7 +186,6 @@ export function Scene() {
       {modules.map((mod) => (
         <Board key={mod.id} module={mod} />
       ))}
-      <BusGlow />
       <Wires />
 
       <CameraRig view={view} />
