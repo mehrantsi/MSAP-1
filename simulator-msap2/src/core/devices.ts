@@ -1,3 +1,4 @@
+import ED_PROG from '../rom/ed-prog.json'
 import { assemble } from './asm'
 import { EXAMPLES } from './examples'
 import { MSAP2 } from './isa'
@@ -11,7 +12,7 @@ export interface Devices {
 const USER_BASE = 0x1000
 
 function seededFiles(): Record<string, number[]> {
-  const files: Record<string, number[]> = {}
+  const files: Record<string, number[]> = { EDIT: ED_PROG as number[] }
   for (const example of EXAMPLES) {
     const result = assemble(example.source, MSAP2)
     if (!result.ok) continue
@@ -24,6 +25,15 @@ function seededFiles(): Record<string, number[]> {
     files[example.name.toUpperCase()] = bytes
   }
   return files
+}
+
+function seedChecksum(files: Record<string, number[]>): string {
+  let hash = 0
+  for (const name of Object.keys(files).sort()) {
+    for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+    for (const byte of files[name]) hash = (hash * 33 + byte) >>> 0
+  }
+  return String(hash)
 }
 
 export const TX_CYCLES = 80
@@ -97,7 +107,13 @@ export class DiskDevice {
   constructor(storageKeyName = 'msap2-disk') {
     this.storageKeyName = storageKeyName
     try {
-      if (localStorage.getItem(this.storageKeyName) === null) this.saveFiles(seededFiles())
+      const seeds = seededFiles()
+      const sum = seedChecksum(seeds)
+      const markerKey = `${this.storageKeyName}-seed`
+      if (localStorage.getItem(markerKey) !== sum) {
+        this.saveFiles({ ...this.loadFiles(), ...seeds })
+        localStorage.setItem(markerKey, sum)
+      }
     } catch {
       /* no storage available */
     }

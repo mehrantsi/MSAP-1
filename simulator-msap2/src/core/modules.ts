@@ -136,6 +136,8 @@ export const MODULES: ModuleDef[] = [
       { ref: 'C1', kind: 'cap', value: '10nF', pins: { '1': '555_THR', '2': 'GND' } },
       { ref: 'SW1', kind: 'switch', value: 'step', pins: { '1': 'SW1_DEB', '2': 'GND' } },
       { ref: 'SW2', kind: 'switch', value: 'mode', pins: { '1': 'SW2_DEB', '2': 'GND' } },
+      { ref: 'R4', kind: 'res', value: '470', pins: { '1': 'CLK', '2': 'D1A' } },
+      { ref: 'D1', kind: 'led', value: 'clk', color: '#4c8dff', hidden3d: true, pins: { '1': 'D1A', '2': 'GND' } },
       { ref: 'R3', kind: 'res', value: '10K', pins: { '1': 'VCC', '2': 'RES_RC' } },
       { ref: 'C2', kind: 'cap', value: '10uF', pins: { '1': 'RES_RC', '2': 'GND' } },
       { ref: 'SW4', kind: 'switch', value: 'reset', pins: { '1': 'RES_RC', '2': 'GND' } },
@@ -159,6 +161,8 @@ export const MODULES: ModuleDef[] = [
     passives: [
       { ref: 'RN1', kind: 'rnet', value: '470x9', pins: rnet9('PC') },
       { ref: 'LB1', kind: 'ledbar', value: 'PC LO', color: '#34c759', hidden3d: true, pins: bar8('PC') },
+      { ref: 'RN7', kind: 'rnet', value: '470x6', pins: { '1': 'GND', '2': 'PC8', '3': 'PC9', '4': 'PC10', '5': 'PC11', '6': 'PC12' } },
+      { ref: 'LB7', kind: 'ledbar', value: 'PC HI', color: '#34c759', hidden3d: true, pins: { '1': 'PC8', '2': 'PC9', '3': 'PC10', '4': 'PC11', '5': 'PC12' } },
     ],
     leds: [
       { label: 'PCH', color: 'green', count: 5, seriesOhm: 470, value: (s) => s.pc >> 8 },
@@ -234,6 +238,8 @@ export const MODULES: ModuleDef[] = [
       },
     ],
     passives: [
+      { ref: 'RN9', kind: 'rnet', value: '470x5', pins: { '1': 'GND', '2': 'FC', '3': 'FZ', '4': 'FN', '5': 'FIE' } },
+      { ref: 'LB9', kind: 'ledbar', value: 'FLAGS', color: '#ff453a', hidden3d: true, pins: { '1': 'FC', '2': 'FZ', '3': 'FN', '4': 'FIE' } },
       { ref: 'R18', kind: 'res', value: '470', pins: { '1': 'CF', '2': 'GND' } },
       { ref: 'R19', kind: 'res', value: '470', pins: { '1': 'ZF', '2': 'GND' } },
     ],
@@ -266,6 +272,8 @@ export const MODULES: ModuleDef[] = [
     passives: [
       { ref: 'RN5', kind: 'rnet', value: '220x9', pins: rnet9('MAR') },
       { ref: 'LB5', kind: 'ledbar', value: 'ADDR', color: '#ffd60a', hidden3d: true, pins: bar8('MAR') },
+      { ref: 'RN8', kind: 'rnet', value: '220x6', pins: { '1': 'GND', '2': 'MAR8', '3': 'MAR9', '4': 'MAR10', '5': 'MAR11', '6': 'MAR12' } },
+      { ref: 'LB8', kind: 'ledbar', value: 'ADDR HI', color: '#ffd60a', hidden3d: true, pins: { '1': 'MAR8', '2': 'MAR9', '3': 'MAR10', '4': 'MAR11', '5': 'MAR12' } },
     ],
     leds: [
       { label: 'MARH', color: 'yellow', count: 5, seriesOhm: 220, value: (s) => s.mar >> 8 },
@@ -298,7 +306,10 @@ export const MODULES: ModuleDef[] = [
       { ref: 'U49', part: '74HC161' },
       { ref: 'U59', part: '74HC161' },
     ],
-    passives: [{ ref: 'RN6', kind: 'rnet', value: '470x9', pins: rnet9('OPC') }],
+    passives: [
+      { ref: 'RN6', kind: 'rnet', value: '470x9', pins: rnet9('OP') },
+      { ref: 'LB6', kind: 'ledbar', value: 'OPC', color: '#4c8dff', hidden3d: true, pins: bar8('OP') },
+    ],
     leds: [{ label: 'OPC', color: 'blue', count: 8, seriesOhm: 470, value: (s) => s.irOpcode }],
   },
   {

@@ -81,7 +81,7 @@ prompt: .asciiz "SAY SOMETHING: "
     source: `; timer interrupt demo: hooks the RAM interrupt vector, counts ticks on the display
 .equ SYS_EXIT, 0x01C
 .equ IRQVEC, 0x1F1A
-.equ COUNT, 0x1EF0
+.equ COUNT, 0x1EE0
 
 .org 0x1000
         lda #<handler

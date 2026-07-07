@@ -214,6 +214,13 @@ const CASES: { name: string; run: () => void }[] = [
       typeLine(machine, 'R 1000')
       if (!machine.devices.terminal.output.includes('HELLO FROM MSAP-2!'))
         throw new Error(`L HELLO + R 1000 failed: ${JSON.stringify(machine.devices.terminal.output.slice(-120))}`)
+      machine.devices.terminal.typeText('R TICKS')
+      machine.devices.terminal.typeByte(13)
+      run(machine, 600000)
+      if (machine.devices.display === 0) throw new Error('seeded R TICKS never ticked the display')
+      machine.devices.terminal.typeByte(32)
+      run(machine, 600000)
+      if (!machine.devices.terminal.output.trimEnd().endsWith('>')) throw new Error('R TICKS did not return to MOS')
     },
   },
   {
@@ -335,6 +342,71 @@ const CASES: { name: string; run: () => void }[] = [
       run(machine, 200000)
       const out = machine.devices.terminal.output
       if (!out.trimEnd().endsWith('>')) throw new Error('did not return to MOS')
+    },
+  },
+  {
+    name: 'ED: write a labeled program, assemble to disk, run it',
+    run: () => {
+      const machine = bootMachine()
+      run(machine, 400000)
+      typeLine(machine, 'R EDIT')
+      if (!machine.devices.terminal.output.includes('ED 1.0')) throw new Error('ED did not start')
+      typeLine(machine, '10 ldx #0')
+      typeLine(machine, '20 top: txa')
+      typeLine(machine, '30 add #30')
+      typeLine(machine, '40 jsr 10')
+      typeLine(machine, '50 inx')
+      typeLine(machine, '60 cpx #5')
+      typeLine(machine, '70 jnz top')
+      typeLine(machine, '80 rts')
+      typeLine(machine, '.a count')
+      if (!machine.devices.terminal.output.includes('OK')) throw new Error(`assemble failed: ${JSON.stringify(machine.devices.terminal.output.slice(-120))}`)
+      typeLine(machine, '.q')
+      typeLine(machine, 'R COUNT')
+      const out = machine.devices.terminal.output
+      if (!out.includes('01234')) throw new Error(`program output wrong: ${JSON.stringify(out.slice(-120))}`)
+    },
+  },
+  {
+    name: 'ED: source save/open roundtrip, line replace and delete',
+    run: () => {
+      const machine = bootMachine()
+      run(machine, 400000)
+      typeLine(machine, 'R EDIT')
+      typeLine(machine, '10 lda #41')
+      typeLine(machine, '20 rts')
+      typeLine(machine, '.s src')
+      if (!machine.devices.terminal.output.includes('OK')) throw new Error('source save failed')
+      typeLine(machine, '.q')
+      typeLine(machine, 'R EDIT')
+      typeLine(machine, '.o src')
+      typeLine(machine, '10 lda #42')
+      typeLine(machine, '15 brk')
+      typeLine(machine, '15')
+      typeLine(machine, '.l')
+      const out = machine.devices.terminal.output
+      const listing = out.slice(out.lastIndexOf('.l'))
+      if (!listing.includes('0010 lda #42')) throw new Error(`replace missing: ${JSON.stringify(listing.slice(0, 120))}`)
+      if (!listing.includes('0020 rts')) throw new Error('loaded line missing')
+      if (listing.includes('brk')) throw new Error('deleted line still listed')
+      typeLine(machine, '.q')
+    },
+  },
+  {
+    name: 'ED: assembly errors report the line and abort cleanly',
+    run: () => {
+      const machine = bootMachine()
+      run(machine, 400000)
+      typeLine(machine, 'R EDIT')
+      typeLine(machine, '10 lda #41')
+      typeLine(machine, '20 fnord')
+      typeLine(machine, '.a bad')
+      const out = machine.devices.terminal.output
+      if (!out.includes('ERR @0020')) throw new Error(`missing line error: ${JSON.stringify(out.slice(-100))}`)
+      typeLine(machine, '.q')
+      typeLine(machine, 'F')
+      const listing = machine.devices.terminal.output
+      if (listing.slice(listing.lastIndexOf('F')).includes('BAD')) throw new Error('failed assembly left a file')
     },
   },
   {
