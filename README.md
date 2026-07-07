@@ -23,6 +23,10 @@ MSAP-2 will include:
 
 ![MSAP1](https://github.com/mehrantsi/MSAP-1/blob/main/IMG_0575.jpeg)
 
+## Simulator
+
+The [simulator](simulator) folder contains a cycle-accurate digital twin of this machine: it executes the real microcode EEPROM images in a 3D/2D bench view with a built-in assembler, breakpoints, a logic analyzer, a per-part electrical model, and KiCad netlist/PCB export. It is the workbench for settling MSAP-2 before building it.
+
 ## Sample Programs
 
 There are a few sample programs written in MSAP-1 assembly that can be found [here](https://github.com/mehrantsi/8-bit_CPU_Programmer/tree/main/Examples).
