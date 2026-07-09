@@ -2,7 +2,7 @@
 
 An 8-bit discrete-logic CPU on breadboards - SAP-1 architecture, mainly inspired by Ben Eater's implementation, and the predecessor of [MSAP-2](https://github.com/mehrantsi/MSAP-2). It is built, running, and fully mirrored by a cycle-accurate simulator.
 
-| | |
+| Aspect | Description |
 |---|---|
 | Datapath | A and B registers (74HC173), 8-bit program counter, adder/subtractor ALU (74LS283 + 74HC86 two's complement) |
 | Control | 2x AT28C16 microcode EEPROMs, 12-bit instruction register (4-bit opcode + 8-bit operand), JK-latched fetch reuse, flag-banked conditional jumps (CF/ZF) |
